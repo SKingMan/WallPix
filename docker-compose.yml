@@ -1,0 +1,57 @@
+##############################################################
+# WallPix docker-compose.yml
+#
+# 架构：
+#   浏览器 → :18082 (本容器，同源反代)
+#               容器内 /api/* → host.docker.internal:8090 (宿主机 PB，走内网)
+#
+# 关键：容器用 extra_hosts 把 host-gateway 映射为 host.docker.internal
+#       （Linux 上需要这一行，Mac/Win Docker Desktop 原生支持）
+##############################################################
+
+services:
+  wallpix:
+    build:
+      context: .
+      args:
+        # 前端用相对路径，同源部署
+        VITE_POCKETBASE_URL: ${VITE_POCKETBASE_URL:-/}
+
+    image: wallpix:latest
+    container_name: wallpix
+    restart: unless-stopped
+
+    ports:
+      # 对外暴露端口；默认 18082
+      - "${WEB_PORT:-18082}:80"
+
+    # 关键：让容器能访问宿主机的 PocketBase（走内网）
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    environment:
+      - TZ=${TZ:-Asia/Shanghai}
+      - PORT=80
+      - POCKETBASE_HOST=host.docker.internal
+      - POCKETBASE_PORT=${POCKETBASE_PORT:-8090}
+
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1/api/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+
+    # 资源限制
+    deploy:
+      resources:
+        limits:
+          memory: 192M
+        reservations:
+          memory: 32M
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

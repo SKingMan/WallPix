@@ -1,0 +1,39 @@
+# 依赖和构建产物（Docker 内部会重新构建）
+node_modules
+dist
+
+# Git / 编辑器 / 系统
+.git
+.gitignore
+.gitattributes
+.DS_Store
+Thumbs.db
+.vscode
+.idea
+*.swp
+*.swo
+
+# 环境和密钥（绝不能进镜像）
+.env
+.env.local
+.env.*.local
+.env.docker.example
+
+# 日志和临时文件
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.cache
+.tmp
+
+# AI 工作日志（个人）
+.workbuddy
+
+# 文档和脚本（部署不需要）
+README.md
+scripts
+
+# Vercel 配置（已切到 Docker）
+vercel.json
